@@ -40,6 +40,7 @@ h2 {
 }
 .card:hover { border-color: #c7cbff; }
 .top-card { display: flex; gap: 14px; padding: 18px; }
+.top-card .card-body { flex: 1; }
 .rank { font-size: 22px; font-weight: 800; color: var(--accent); opacity: .8; min-width: 26px; }
 
 .title { color: var(--text); font-weight: 600; text-decoration: none; font-size: 16px; }
@@ -56,6 +57,9 @@ h2 {
 }
 .dots { color: #f59e0b; font-size: 11px; letter-spacing: 2px; }
 .summary { margin: 8px 0 0; font-size: 14px; color: #374151; }
+.related { margin-top: 8px; font-size: 13px; color: var(--muted); }
+.related a { color: var(--accent); text-decoration: none; opacity: .85; }
+.related a:hover { opacity: 1; text-decoration: underline; }
 
 .empty {
   background: var(--card); border: 1px dashed var(--border);

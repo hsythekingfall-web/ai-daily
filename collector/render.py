@@ -6,6 +6,8 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from collector.cluster import cluster_items
+
 log = logging.getLogger(__name__)
 
 WEEKDAYS = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
@@ -59,15 +61,19 @@ def render_site(store, site_dir: Path, templates_dir: Path) -> None:
     for row in dates:
         date_str = row["first_seen_date"]
         items = [dict(r) for r in store.items_by_date(date_str)]
+        clusters = cluster_items(items)
 
-        top = [r for r in items if r["importance"] >= 4][:5]
-        top_ids = {r["id"] for r in top}
+        # "今日必读"取事件(簇)的 lead;簇内其余来源跟随 lead 展示
+        top_clusters = [c for c in clusters if c["lead"]["importance"] >= 4][:5]
+        top_lead_ids = {c["lead"]["id"] for c in top_clusters}
+        rest = [c for c in clusters if c["lead"]["id"] not in top_lead_ids]
+
         groups: dict[str, list[dict]] = {}
-        for r in items:
-            if r["id"] not in top_ids:
-                groups.setdefault(r["category"], []).append(r)
+        for c in rest:
+            groups.setdefault(c["lead"]["category"], []).append(c)
         ordered_groups = sorted(
-            groups.items(), key=lambda kv: -max(x["importance"] for x in kv[1])
+            groups.items(),
+            key=lambda kv: -max(x["lead"]["importance"] for x in kv[1]),
         )
 
         in_root = date_str == latest_date
@@ -77,7 +83,7 @@ def render_site(store, site_dir: Path, templates_dir: Path) -> None:
             date_str=date_str,
             fmt_date_str=fmt_date(date_str),
             total=len(items),
-            top=top,
+            top=top_clusters,
             groups=ordered_groups,
             generated_at=generated_at,
         )

@@ -1,3 +1,23 @@
+{% macro cluster_card(c, rank=None) %}
+<article class="card{% if rank %} top-card{% endif %}">
+  {% if rank %}<div class="rank">{{ rank }}</div>{% endif %}
+  <div class="card-body">
+    <a class="title" href="{{ c.lead.url }}" target="_blank" rel="noopener">{{ c.lead.title }}</a>
+    <div class="meta">
+      <span class="source">{{ c.lead.source_name }}</span>
+      {% if c.lead.published_at %}<span class="sep">·</span><time>{{ c.lead.published_at | fmt_time }}</time>{% endif %}
+      <span class="chip">{{ c.lead.category }}</span>
+      <span class="dots" title="重要度">{{ c.lead.importance | dots }}</span>
+    </div>
+    {% if c.lead.summary %}<p class="summary">{{ c.lead.summary }}</p>{% endif %}
+    {% if c.related %}
+    <div class="related">相关报道:
+      {% for r in c.related %}<a href="{{ r.url }}" target="_blank" rel="noopener" title="{{ r.title }}">{{ r.source_name }}</a>{% if not loop.last %}、{% endif %}{% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</article>
+{% endmacro %}
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -24,37 +44,17 @@
   {% if top %}
   <section>
     <h2>今日必读</h2>
-    {% for item in top %}
-    <article class="card top-card">
-      <div class="rank">{{ loop.index }}</div>
-      <div class="card-body">
-        <a class="title" href="{{ item.url }}" target="_blank" rel="noopener">{{ item.title }}</a>
-        <div class="meta">
-          <span class="source">{{ item.source_name }}</span>
-          {% if item.published_at %}<span class="sep">·</span><time>{{ item.published_at | fmt_time }}</time>{% endif %}
-          <span class="chip">{{ item.category }}</span>
-          <span class="dots" title="重要度">{{ item.importance | dots }}</span>
-        </div>
-        {% if item.summary %}<p class="summary">{{ item.summary }}</p>{% endif %}
-      </div>
-    </article>
+    {% for c in top %}
+    {{ cluster_card(c, rank=loop.index) }}
     {% endfor %}
   </section>
   {% endif %}
 
-  {% for category, items in groups %}
+  {% for category, clusters in groups %}
   <section>
     <h2><span class="chip">{{ category }}</span></h2>
-    {% for item in items %}
-    <article class="card">
-      <a class="title" href="{{ item.url }}" target="_blank" rel="noopener">{{ item.title }}</a>
-      <div class="meta">
-        <span class="source">{{ item.source_name }}</span>
-        {% if item.published_at %}<span class="sep">·</span><time>{{ item.published_at | fmt_time }}</time>{% endif %}
-        <span class="dots" title="重要度">{{ item.importance | dots }}</span>
-      </div>
-      {% if item.summary %}<p class="summary">{{ item.summary }}</p>{% endif %}
-    </article>
+    {% for c in clusters %}
+    {{ cluster_card(c) }}
     {% endfor %}
   </section>
   {% endfor %}
