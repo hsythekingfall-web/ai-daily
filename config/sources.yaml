@@ -1,0 +1,26 @@
+# 信息源配置:新增源在 sources 下加条目即可,下次采集自动生效
+sources:
+  - key: techcrunch
+    name: TechCrunch AI
+    url: https://techcrunch.com/category/artificial-intelligence/feed/
+  - key: venturebeat
+    name: VentureBeat AI
+    url: https://venturebeat.com/category/ai/feed/
+  - key: theverge
+    name: The Verge AI
+    url: https://www.theverge.com/rss/ai-artificial-intelligence/index.xml
+  - key: arstechnica
+    name: Ars Technica AI
+    url: https://arstechnica.com/ai/feed/
+  - key: mittr
+    name: MIT Technology Review
+    url: https://www.technologyreview.com/topic/artificial-intelligence/feed
+  - key: hackernews
+    name: Hacker News(100+ 赞的 AI 讨论)
+    url: "https://hnrss.org/newest?q=LLM+OR+GPT+OR+%22artificial+intelligence%22&points=100"
+  - key: deepmind
+    name: Google DeepMind Blog
+    url: https://deepmind.google/blog/rss.xml
+  - key: openai
+    name: OpenAI News
+    url: https://openai.com/news/rss.xml

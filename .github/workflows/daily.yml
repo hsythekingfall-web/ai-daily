@@ -1,0 +1,48 @@
+name: 每日采集
+
+on:
+  schedule:
+    - cron: "0 0 * * *"   # UTC 00:00 = 北京时间 08:00
+  workflow_dispatch: {}    # 支持在 Actions 页面手动触发
+
+permissions:
+  contents: write   # 回写 SQLite 数据库
+  pages: write      # 发布 GitHub Pages
+  id-token: write
+
+# Pages 部署互斥,避免并发发布冲突
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  collect-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: 安装依赖
+        run: pip install -r requirements.txt
+
+      - name: 采集并生成站点
+        run: python run.py
+
+      - name: 回写数据库(实现历史持久化)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/aidaily.db
+          git diff --cached --quiet || git commit -m "data: $(date -u +'%Y-%m-%d') 采集入库"
+          git push
+
+      - name: 发布到 GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - uses: actions/deploy-pages@v4

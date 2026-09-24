@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% if date_str %}AI 前沿日报 · {{ fmt_date_str }}{% else %}AI 前沿日报{% endif %}</title>
+<link rel="stylesheet" href="{{ root }}/style.css">
+</head>
+<body>
+<div class="page">
+  <header class="site-head">
+    <div class="brand">AI 前沿日报</div>
+    <nav>
+      <a href="{{ root }}/index.html" {% if latest %}class="active"{% endif %}>今日</a>
+      <a href="{{ root }}/archive.html">归档</a>
+    </nav>
+  </header>
+
+  {% if not date_str %}
+  <div class="empty">还没有数据,先运行一次采集:<code>python run.py</code></div>
+  {% else %}
+  <h1 class="date-title">{{ fmt_date_str }}<span class="count">共 {{ total }} 条</span></h1>
+
+  {% if top %}
+  <section>
+    <h2>今日必读</h2>
+    {% for item in top %}
+    <article class="card top-card">
+      <div class="rank">{{ loop.index }}</div>
+      <div class="card-body">
+        <a class="title" href="{{ item.url }}" target="_blank" rel="noopener">{{ item.title }}</a>
+        <div class="meta">
+          <span class="source">{{ item.source_name }}</span>
+          {% if item.published_at %}<span class="sep">·</span><time>{{ item.published_at | fmt_time }}</time>{% endif %}
+          <span class="chip">{{ item.category }}</span>
+          <span class="dots" title="重要度">{{ item.importance | dots }}</span>
+        </div>
+        {% if item.summary %}<p class="summary">{{ item.summary }}</p>{% endif %}
+      </div>
+    </article>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {% for category, items in groups %}
+  <section>
+    <h2><span class="chip">{{ category }}</span></h2>
+    {% for item in items %}
+    <article class="card">
+      <a class="title" href="{{ item.url }}" target="_blank" rel="noopener">{{ item.title }}</a>
+      <div class="meta">
+        <span class="source">{{ item.source_name }}</span>
+        {% if item.published_at %}<span class="sep">·</span><time>{{ item.published_at | fmt_time }}</time>{% endif %}
+        <span class="dots" title="重要度">{{ item.importance | dots }}</span>
+      </div>
+      {% if item.summary %}<p class="summary">{{ item.summary }}</p>{% endif %}
+    </article>
+    {% endfor %}
+  </section>
+  {% endfor %}
+  {% endif %}
+
+  <footer>由 ai-daily 采集器于 {{ generated_at }} 自动生成 · 内容来自公开 RSS,仅收录标题、摘要与原文链接</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+site/
+logs/
+.DS_Store
+
+# 注意:data/ 故意不入 ignore —— SQLite 数据库随仓库提交,
+# 这样 GitHub Actions 每次运行才能在历史数据上增量采集。
