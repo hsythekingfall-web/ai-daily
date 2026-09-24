@@ -26,7 +26,7 @@
 <link rel="stylesheet" href="{{ root }}/style.css">
 </head>
 <body>
-<div class="wrap">
+<div class="page">
   <nav>
     <span class="logo"><span class="seal">日报</span><span class="name">AI 前沿日报</span></span>
     <span class="links">
@@ -35,58 +35,91 @@
     </span>
   </nav>
 
-  {% if not date_str %}
-  <div class="empty">还没有数据，先运行一次采集：<code>python run.py</code></div>
-  {% else %}
+  <div class="layout">
+    <aside class="sidenav">
+      <div class="side-group">本期内容</div>
+      <a class="side-link active" data-target="digest" href="#digest"><span class="dot" style="background:#6c63d2"></span>今日精选</a>
+      {% for category, clusters in groups %}
+      <a class="side-link" data-target="sec-{{ loop.index }}" href="#sec-{{ loop.index }}"><span class="dot {{ catmap.get(category, 'c-misc') }}"></span>{{ category }}</a>
+      {% endfor %}
+      <div class="side-group">站点</div>
+      <a class="side-link" href="{{ root }}/archive.html"><span class="dot" style="background:#c9c4ec"></span>往期归档</a>
+    </aside>
 
-  {% if latest and hero %}
-  <section class="hero">
-    <div>
-      <div class="eyebrow">AI 驱动的每日科技早报</div>
-      <h1>每天八点，看懂 AI 世界发生了什么</h1>
-      <p class="desc">ai-daily 每天从全球一线科技媒体与官方博客采集资讯，自动去重、聚类、翻译摘要，只留下真正值得你读的部分。</p>
-      <div class="values"><span>读得更少一点</span><span>判断更准一点</span><span>理解更快一点</span></div>
-      <div class="cta">
-        <a class="btn" href="#digest">阅读今日精选 →</a>
-        <a class="btn ghost" href="{{ root }}/archive.html">浏览往期归档</a>
+    <main>
+      {% if not date_str %}
+      <div class="empty">还没有数据，先运行一次采集：<code>python run.py</code></div>
+      {% else %}
+
+      {% if latest and hero %}
+      <section class="hero">
+        <div>
+          <div class="eyebrow">AI 驱动的每日科技早报</div>
+          <h1>每天八点，看懂 AI 世界发生了什么</h1>
+          <p class="desc">ai-daily 每天从全球一线科技媒体与官方博客采集资讯，自动去重、聚类、翻译摘要，只留下真正值得你读的部分。</p>
+          <div class="values"><span>读得更少一点</span><span>判断更准一点</span><span>理解更快一点</span></div>
+          <div class="cta">
+            <a class="btn" href="#digest">阅读今日精选 →</a>
+            <a class="btn ghost" href="{{ root }}/archive.html">浏览往期归档</a>
+          </div>
+          <div class="trust">全部自动生成 · 仅收录标题、摘要与原文链接</div>
+        </div>
+        <div class="brief">
+          <div class="eyebrow">今日早报 · {{ date_str }}</div>
+          <h2>第 {{ hero.issue }} 期 · {{ hero.headline }}</h2>
+          <div class="stats">{{ stats.sources }} 个信息源 · {{ stats.collected }} 条采集 · 聚类为 {{ stats.clusters }} 个事件</div>
+          {% if hero.digest %}<div class="digestbox">{{ hero.digest }}</div>{% endif %}
+          <a class="go" href="#digest">阅读今日早报 →</a>
+        </div>
+      </section>
+      {% else %}
+      <div class="pagehead">
+        <div class="eyebrow">第 {{ issue }} 期</div>
+        <h1>{{ fmt_date_str }}</h1>
+        <div class="sub">{{ stats.sources }} 个信息源 · {{ stats.collected }} 条采集 · 聚类为 {{ stats.clusters }} 个事件</div>
       </div>
-      <div class="trust">全部自动生成 · 仅收录标题、摘要与原文链接</div>
-    </div>
-    <div class="brief">
-      <div class="eyebrow">今日早报 · {{ date_str }}</div>
-      <h2>第 {{ hero.issue }} 期 · {{ hero.headline }}</h2>
-      <div class="stats">{{ stats.sources }} 个信息源 · {{ stats.collected }} 条采集 · 聚类为 {{ stats.clusters }} 个事件</div>
-      {% if hero.digest %}<div class="digestbox">{{ hero.digest }}</div>{% endif %}
-      <a class="go" href="#digest">阅读今日早报 →</a>
-    </div>
-  </section>
-  {% else %}
-  <div class="pagehead">
-    <div class="eyebrow">第 {{ issue }} 期</div>
-    <h1>{{ fmt_date_str }}</h1>
-    <div class="sub">{{ stats.sources }} 个信息源 · {{ stats.collected }} 条采集 · 聚类为 {{ stats.clusters }} 个事件</div>
-  </div>
-  {% endif %}
+      {% endif %}
 
-  {% if top %}
-  <h3 class="sec" id="digest">今日精选</h3>
-  <div class="sec-sub">按重要度排序 · 由 AI 评估并翻译</div>
-  <div class="cards">
-    {{ card(top[0], lead_badge=True) }}
-    {% for c in top[1:] %}{{ card(c) }}{% endfor %}
-  </div>
-  {% endif %}
+      {% if top %}
+      <h3 class="sec" id="digest">今日精选</h3>
+      <div class="sec-sub">按重要度排序 · 由 AI 评估并翻译</div>
+      <div class="cards">
+        {{ card(top[0], lead_badge=True) }}
+        {% for c in top[1:] %}{{ card(c) }}{% endfor %}
+      </div>
+      {% endif %}
 
-  {% for category, clusters in groups %}
-  <h3 class="sec">{{ category }}</h3>
-  <div class="sec-sub">{{ clusters | length }} 条</div>
-  <div class="cards">
-    {% for c in clusters %}{{ card(c) }}{% endfor %}
-  </div>
-  {% endfor %}
-  {% endif %}
+      {% for category, clusters in groups %}
+      <h3 class="sec" id="sec-{{ loop.index }}">{{ category }}</h3>
+      <div class="sec-sub">{{ clusters | length }} 条</div>
+      <div class="cards">
+        {% for c in clusters %}{{ card(c) }}{% endfor %}
+      </div>
+      {% endfor %}
+      {% endif %}
 
-  <footer>AI 前沿日报 · 由 ai-daily 采集器于 {{ generated_at }} 自动生成 · 仅收录标题、摘要与原文链接</footer>
+      <footer>AI 前沿日报 · 由 ai-daily 采集器于 {{ generated_at }} 自动生成 · 仅收录标题、摘要与原文链接</footer>
+    </main>
+  </div>
 </div>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll(".side-link[data-target]"));
+  if (!links.length) return;
+  var byId = {};
+  links.forEach(function (l) { byId[l.dataset.target] = l; });
+  var setActive = function (id) {
+    links.forEach(function (l) { l.classList.toggle("active", l.dataset.target === id); });
+  };
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { if (e.isIntersecting) setActive(e.target.id); });
+  }, { rootMargin: "-15% 0px -70% 0px" });
+  links.forEach(function (l) {
+    var el = document.getElementById(l.dataset.target);
+    if (el) observer.observe(el);
+  });
+})();
+</script>
 </body>
 </html>

@@ -10,7 +10,20 @@ body {
 }
 a { color: inherit; text-decoration: none; transition: color .15s ease; }
 a:hover { color: #6c63d2; }
+html { scroll-behavior: smooth; }
+.page { max-width: 1220px; margin: 0 auto; padding: 0 32px 64px; }
 .wrap { max-width: 1020px; margin: 0 auto; padding: 0 32px 64px; }
+
+/* 双栏布局:左侧粘性导航 + 主内容 */
+.layout { display: grid; grid-template-columns: 176px minmax(0, 1fr); gap: 42px; align-items: start; }
+.sidenav { position: sticky; top: 20px; display: flex; flex-direction: column; gap: 2px; }
+.side-group { font-size: 12px; color: #9095ad; letter-spacing: 1px; margin: 16px 0 6px; padding-left: 12px; }
+.side-link { display: flex; align-items: center; gap: 9px; padding: 7px 12px; border-radius: 8px; font-size: 14px; color: #555b74; }
+.side-link:hover { background: #ecebf9; color: #3b3663; }
+.side-link.active { background: #e9e6f9; color: #5a51c0; font-weight: 600; }
+.dot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+.layout main { min-width: 0; }
+h3.sec { scroll-margin-top: 24px; }
 
 /* 分类色签(DESIGN.md 第 2 节) */
 .c-policy { background: #f7ecd0; color: #8a6a1c; }
@@ -120,11 +133,14 @@ footer {
   text-align: center; color: #9095ad; font-size: 12.5px; letter-spacing: .5px;
 }
 
+@media (max-width: 960px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidenav { display: none; }
+}
 @media (max-width: 760px) {
-  .wrap { padding: 0 18px 48px; }
+  .page, .wrap { padding: 0 18px 48px; }
   .hero { grid-template-columns: 1fr; gap: 24px; padding-top: 26px; }
   h1 { font-size: 31px; }
   .cards, .archive-grid { grid-template-columns: 1fr; }
   .card.wide { grid-column: auto; }
-  .brand-date { display: none; }
 }
