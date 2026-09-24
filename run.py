@@ -14,6 +14,7 @@ sys.path.insert(0, str(BASE_DIR))
 import yaml
 
 from collector.classify import classify, score_importance
+from collector.llm import process_pending
 from collector.dedup import title_hash, url_hash
 from collector.fetch import fetch_all
 from collector.render import render_site
@@ -67,6 +68,8 @@ def main() -> int:
     log.info("抓到 %d 条,新增 %d 条,失败 %d 个源", len(raw_items), added, len(errors))
     for key, err in errors.items():
         log.warning("  源 %s 失败:%s", key, err)
+
+    process_pending(store)
 
     render_site(store, BASE_DIR / "site", BASE_DIR / "templates")
     store.close()

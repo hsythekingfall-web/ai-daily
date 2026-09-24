@@ -2,14 +2,15 @@
 <article class="card{% if rank %} top-card{% endif %}">
   {% if rank %}<div class="rank">{{ rank }}</div>{% endif %}
   <div class="card-body">
-    <a class="title" href="{{ c.lead.url }}" target="_blank" rel="noopener">{{ c.lead.title }}</a>
+    <a class="title" href="{{ c.lead.url }}" target="_blank" rel="noopener" title="{{ c.lead.title }}">{{ c.lead.title_zh or c.lead.title }}</a>
     <div class="meta">
       <span class="source">{{ c.lead.source_name }}</span>
       {% if c.lead.published_at %}<span class="sep">·</span><time>{{ c.lead.published_at | fmt_time }}</time>{% endif %}
       <span class="chip">{{ c.lead.category }}</span>
       <span class="dots" title="重要度">{{ c.lead.importance | dots }}</span>
     </div>
-    {% if c.lead.summary %}<p class="summary">{{ c.lead.summary }}</p>{% endif %}
+    {% set body = c.lead.summary_zh or c.lead.summary %}
+    {% if body %}<p class="summary">{{ body }}</p>{% endif %}
     {% if c.related %}
     <div class="related">相关报道:
       {% for r in c.related %}<a href="{{ r.url }}" target="_blank" rel="noopener" title="{{ r.title }}">{{ r.source_name }}</a>{% if not loop.last %}、{% endif %}{% endfor %}

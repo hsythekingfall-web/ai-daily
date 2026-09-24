@@ -38,6 +38,19 @@ class Store:
         self.conn = sqlite3.connect(db_path)
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(SCHEMA)
+        self._migrate()
+
+    def _migrate(self) -> None:
+        """为旧库补齐新增列(新库由 SCHEMA 直接建出)。"""
+        cols = {r[1] for r in self.conn.execute("PRAGMA table_info(items)")}
+        if "title_zh" not in cols:
+            self.conn.execute("ALTER TABLE items ADD COLUMN title_zh TEXT")
+        if "summary_zh" not in cols:
+            self.conn.execute("ALTER TABLE items ADD COLUMN summary_zh TEXT")
+        if "llm_done" not in cols:
+            self.conn.execute(
+                "ALTER TABLE items ADD COLUMN llm_done INTEGER NOT NULL DEFAULT 0"
+            )
 
     def existing_hashes(self) -> tuple[set[str], set[str]]:
         """库里已有的 (url_hash 集合, title_hash 集合)。"""
@@ -58,6 +71,21 @@ class Store:
             "ORDER BY importance DESC, published_at DESC",
             (date_str,),
         ).fetchall()
+
+    def items_missing_llm(self, limit: int) -> list[sqlite3.Row]:
+        return self.conn.execute(
+            "SELECT * FROM items WHERE llm_done = 0 "
+            "ORDER BY published_at DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+
+    def update_llm_result(self, item_id: int, title_zh: str,
+                          summary_zh: str) -> None:
+        self.conn.execute(
+            "UPDATE items SET title_zh = ?, summary_zh = ?, llm_done = 1 "
+            "WHERE id = ?",
+            (title_zh, summary_zh, item_id),
+        )
 
     def dates(self) -> list[sqlite3.Row]:
         """所有有数据的日期及条数,倒序。"""

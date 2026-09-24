@@ -45,6 +45,15 @@ site/                   生成的静态站(不入库,每次重新生成)
 .github/workflows/      定时采集工作流
 ```
 
+## LLM 中文摘要(可选)
+
+配置了 `LLM_API_KEY` 时,采集器会自动为每条资讯生成中文标题和两句话的中文摘要;
+未配置时站点照常生成,只是展示英文原文。
+
+- 默认走 DeepSeek(`deepseek-chat`),在仓库 Secrets 里配置 `LLM_API_KEY` 即可
+- 换其他 OpenAI 兼容服务:再配 `LLM_BASE_URL` 和 `LLM_MODEL` 两个 Secrets/变量
+- 单条失败不影响整体,下次运行自动补处理
+
 ## 设计原则
 
 - 站内只存标题、摘要与原文链接,不转载全文
