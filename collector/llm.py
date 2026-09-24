@@ -71,6 +71,46 @@ def _translate_one(client: httpx.Client, base_url: str, model: str,
     return None
 
 
+def issue_headline(store, date_str: str, leads: list[dict], workers: int = 1) -> str | None:
+    """为某一期生成一句不超过 30 字的中文导读;失败返回 None。"""
+    api_key = os.environ.get("LLM_API_KEY")
+    if not api_key or not leads:
+        return None
+    base_url = os.environ.get("LLM_BASE_URL", "https://api.deepseek.com").rstrip("/")
+    model = os.environ.get("LLM_MODEL", "deepseek-chat")
+    lines = "\n".join(
+        f"- {l.get('title_zh') or l['title']}" for l in leads
+    )
+    prompt = (
+        "以下是一个 AI 新闻早报本期最重要的几条新闻。"
+        "把它们合并成一句不超过 30 字的中文本期导读，直接输出这句话本身，"
+        "不要书名号、句号或任何解释。\n\n" + lines
+    )
+    try:
+        with httpx.Client(
+            trust_env=False, timeout=60.0,
+            headers={"Authorization": f"Bearer {api_key}"},
+        ) as client:
+            resp = client.post(
+                f"{base_url}/chat/completions",
+                json={
+                    "model": model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.3,
+                    "max_tokens": 120,
+                },
+            )
+            resp.raise_for_status()
+            text = resp.json()["choices"][0]["message"]["content"].strip()
+            text = text.strip("《》。\"' ")
+            if 4 <= len(text) <= 60:
+                store.set_issue(date_str, text)
+                return text
+    except Exception as exc:
+        log.warning("本期导读生成失败:%s", exc)
+    return None
+
+
 def process_pending(store, limit: int = 150, workers: int = 5) -> int:
     """处理所有 llm_done=0 的条目;未配置 Key 时不做任何事。"""
     api_key = os.environ.get("LLM_API_KEY")

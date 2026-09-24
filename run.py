@@ -14,7 +14,7 @@ sys.path.insert(0, str(BASE_DIR))
 import yaml
 
 from collector.classify import classify, score_importance
-from collector.llm import process_pending
+from collector.llm import issue_headline, process_pending
 from collector.dedup import title_hash, url_hash
 from collector.fetch import fetch_all
 from collector.render import render_site
@@ -70,6 +70,14 @@ def main() -> int:
         log.warning("  源 %s 失败:%s", key, err)
 
     process_pending(store)
+
+    # 本期导读:取今日重要度最高的 3 条,让 LLM 合成一句 30 字以内的话
+    today_rows = store.items_by_date(today)
+    if today_rows:
+        leads = [dict(r) for r in today_rows[:3]]
+        headline = issue_headline(store, today, leads)
+        if headline:
+            log.info("本期导读:%s", headline)
 
     render_site(store, BASE_DIR / "site", BASE_DIR / "templates")
     store.close()

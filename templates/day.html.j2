@@ -1,21 +1,19 @@
-{% macro cluster_card(c, rank=None) %}
-<article class="card{% if rank %} top-card{% endif %}">
-  {% if rank %}<div class="rank">{{ rank }}</div>{% endif %}
-  <div class="card-body">
-    <a class="title" href="{{ c.lead.url }}" target="_blank" rel="noopener" title="{{ c.lead.title }}">{{ c.lead.title_zh or c.lead.title }}</a>
-    <div class="meta">
-      <span class="source">{{ c.lead.source_name }}</span>
-      {% if c.lead.published_at %}<span class="sep">·</span><time>{{ c.lead.published_at | fmt_time }}</time>{% endif %}
-      <span class="chip">{{ c.lead.category }}</span>
-      <span class="dots" title="重要度">{{ c.lead.importance | dots }}</span>
-    </div>
-    {% set body = c.lead.summary_zh or c.lead.summary %}
-    {% if body %}<p class="summary">{{ body }}</p>{% endif %}
-    {% if c.related %}
-    <div class="related">相关报道:
-      {% for r in c.related %}<a href="{{ r.url }}" target="_blank" rel="noopener" title="{{ r.title }}">{{ r.source_name }}</a>{% if not loop.last %}、{% endif %}{% endfor %}
-    </div>
-    {% endif %}
+{% macro card(c, lead_badge=False) %}
+<article class="card{% if lead_badge %} wide{% endif %}">
+  <div class="top">
+    {% if lead_badge %}<span class="tag tag-lead">今日必读</span>{% endif %}
+    {% if c.related %}<span class="tag tag-lead">相关报道 +{{ c.related | length }}</span>{% endif %}
+    <span class="tag {{ catmap.get(c.lead.category, 'c-misc') }}">{{ c.lead.category }}</span>
+  </div>
+  <h4><a href="{{ c.lead.url }}" target="_blank" rel="noopener" title="{{ c.lead.title }}">{{ c.lead.title_zh or c.lead.title }}</a></h4>
+  {% set body = c.lead.summary_zh or c.lead.summary %}
+  {% if body %}<p>{{ body }}</p>{% endif %}
+  {% if c.related %}
+  <div class="rel">相关报道：{% for r in c.related %}<a href="{{ r.url }}" target="_blank" rel="noopener" title="{{ r.title }}">{{ r.source_name }}</a>{% if not loop.last %}、{% endif %}{% endfor %}</div>
+  {% endif %}
+  <div class="meta">
+    <span>{{ c.lead.source_name }}{% if c.lead.published_at %} · {{ c.lead.published_at | fmt_time }}{% endif %} · <span class="dots">{{ c.lead.importance | dots }}</span></span>
+    <a class="go" href="{{ c.lead.url }}" target="_blank" rel="noopener">阅读原文 →</a>
   </div>
 </article>
 {% endmacro %}
@@ -28,40 +26,67 @@
 <link rel="stylesheet" href="{{ root }}/style.css">
 </head>
 <body>
-<div class="page">
-  <header class="site-head">
-    <div class="brand">AI 前沿日报</div>
-    <nav>
-      <a href="{{ root }}/index.html" {% if latest %}class="active"{% endif %}>今日</a>
+<div class="wrap">
+  <nav>
+    <span class="logo"><span class="seal">日报</span><span class="name">AI 前沿日报</span></span>
+    <span class="links">
+      <a href="{{ root }}/index.html">今日</a>
       <a href="{{ root }}/archive.html">归档</a>
-    </nav>
-  </header>
+    </span>
+  </nav>
 
   {% if not date_str %}
-  <div class="empty">还没有数据,先运行一次采集:<code>python run.py</code></div>
+  <div class="empty">还没有数据，先运行一次采集：<code>python run.py</code></div>
   {% else %}
-  <h1 class="date-title">{{ fmt_date_str }}<span class="count">共 {{ total }} 条</span></h1>
+
+  {% if latest and hero %}
+  <section class="hero">
+    <div>
+      <div class="eyebrow">AI 驱动的每日科技早报</div>
+      <h1>每天八点，看懂 AI 世界发生了什么</h1>
+      <p class="desc">ai-daily 每天从全球一线科技媒体与官方博客采集资讯，自动去重、聚类、翻译摘要，只留下真正值得你读的部分。</p>
+      <div class="values"><span>读得更少一点</span><span>判断更准一点</span><span>理解更快一点</span></div>
+      <div class="cta">
+        <a class="btn" href="#digest">阅读今日精选 →</a>
+        <a class="btn ghost" href="{{ root }}/archive.html">浏览往期归档</a>
+      </div>
+      <div class="trust">全部自动生成 · 仅收录标题、摘要与原文链接</div>
+    </div>
+    <div class="brief">
+      <div class="eyebrow">今日早报 · {{ date_str }}</div>
+      <h2>第 {{ hero.issue }} 期 · {{ hero.headline }}</h2>
+      <div class="stats">{{ stats.sources }} 个信息源 · {{ stats.collected }} 条采集 · 聚类为 {{ stats.clusters }} 个事件</div>
+      {% if hero.digest %}<div class="digestbox">{{ hero.digest }}</div>{% endif %}
+      <a class="go" href="#digest">阅读今日早报 →</a>
+    </div>
+  </section>
+  {% else %}
+  <div class="pagehead">
+    <div class="eyebrow">第 {{ issue }} 期</div>
+    <h1>{{ fmt_date_str }}</h1>
+    <div class="sub">{{ stats.sources }} 个信息源 · {{ stats.collected }} 条采集 · 聚类为 {{ stats.clusters }} 个事件</div>
+  </div>
+  {% endif %}
 
   {% if top %}
-  <section>
-    <h2>今日必读</h2>
-    {% for c in top %}
-    {{ cluster_card(c, rank=loop.index) }}
-    {% endfor %}
-  </section>
+  <h3 class="sec" id="digest">今日精选</h3>
+  <div class="sec-sub">按重要度排序 · 由 AI 评估并翻译</div>
+  <div class="cards">
+    {{ card(top[0], lead_badge=True) }}
+    {% for c in top[1:] %}{{ card(c) }}{% endfor %}
+  </div>
   {% endif %}
 
   {% for category, clusters in groups %}
-  <section>
-    <h2><span class="chip">{{ category }}</span></h2>
-    {% for c in clusters %}
-    {{ cluster_card(c) }}
-    {% endfor %}
-  </section>
+  <h3 class="sec">{{ category }}</h3>
+  <div class="sec-sub">{{ clusters | length }} 条</div>
+  <div class="cards">
+    {% for c in clusters %}{{ card(c) }}{% endfor %}
+  </div>
   {% endfor %}
   {% endif %}
 
-  <footer>由 ai-daily 采集器于 {{ generated_at }} 自动生成 · 内容来自公开 RSS,仅收录标题、摘要与原文链接</footer>
+  <footer>AI 前沿日报 · 由 ai-daily 采集器于 {{ generated_at }} 自动生成 · 仅收录标题、摘要与原文链接</footer>
 </div>
 </body>
 </html>

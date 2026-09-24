@@ -7,30 +7,35 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="page">
-  <header class="site-head">
-    <div class="brand">AI 前沿日报</div>
-    <nav>
+<div class="wrap">
+  <nav>
+    <span class="logo"><span class="seal">日报</span><span class="name">AI 前沿日报</span></span>
+    <span class="links">
       <a href="index.html">今日</a>
-      <a href="archive.html" class="active">归档</a>
-    </nav>
-  </header>
+      <a href="archive.html">归档</a>
+    </span>
+  </nav>
 
-  <h1 class="date-title">往期归档</h1>
+  <h3 class="sec" style="margin-top:30px">往期归档</h3>
+  <div class="sec-sub">共 {{ dates | length }} 期 · 每天早上 8 点自动出刊</div>
+
   {% if dates %}
-  <ul class="archive-list">
+  <div class="archive-grid">
     {% for row in dates %}
-    <li>
-      <a href="days/{{ row.first_seen_date }}.html">{{ fmt_date(row.first_seen_date) }}</a>
-      <span class="count">{{ row.n }} 条</span>
-    </li>
+    <a class="acard" href="days/{{ row.first_seen_date }}.html">
+      <span>
+        <span class="a-date">{{ fmt_date(row.first_seen_date) }}</span>
+        <div class="a-n">{{ row.n }} 条资讯</div>
+      </span>
+      <span class="go">查看 →</span>
+    </a>
     {% endfor %}
-  </ul>
+  </div>
   {% else %}
-  <div class="empty">还没有数据,先运行一次采集:<code>python run.py</code></div>
+  <div class="empty">还没有数据，先运行一次采集：<code>python run.py</code></div>
   {% endif %}
 
-  <footer>由 ai-daily 采集器自动生成</footer>
+  <footer>AI 前沿日报 · 由 ai-daily 采集器自动生成</footer>
 </div>
 </body>
 </html>

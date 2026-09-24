@@ -20,6 +20,10 @@ CREATE TABLE IF NOT EXISTS items (
 );
 CREATE INDEX IF NOT EXISTS idx_items_date ON items(first_seen_date);
 CREATE INDEX IF NOT EXISTS idx_items_title ON items(title_hash);
+CREATE TABLE IF NOT EXISTS issues (
+    date     TEXT PRIMARY KEY,
+    headline TEXT NOT NULL
+);
 """
 
 INSERT_SQL = """
@@ -85,6 +89,19 @@ class Store:
             "UPDATE items SET title_zh = ?, summary_zh = ?, llm_done = 1 "
             "WHERE id = ?",
             (title_zh, summary_zh, item_id),
+        )
+
+    def get_issue(self, date_str: str) -> str | None:
+        row = self.conn.execute(
+            "SELECT headline FROM issues WHERE date = ?", (date_str,)
+        ).fetchone()
+        return row["headline"] if row else None
+
+    def set_issue(self, date_str: str, headline: str) -> None:
+        self.conn.execute(
+            "INSERT INTO issues (date, headline) VALUES (?, ?) "
+            "ON CONFLICT(date) DO UPDATE SET headline = excluded.headline",
+            (date_str, headline),
         )
 
     def dates(self) -> list[sqlite3.Row]:
