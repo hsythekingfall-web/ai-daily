@@ -98,6 +98,7 @@ def render_site(store, site_dir: Path, templates_dir: Path) -> None:
         )
 
         issue = total_days - i
+        in_root = date_str == latest_date
         stats = {
             "sources": len({x["source_key"] for x in items}),
             "collected": len(items),
@@ -105,7 +106,7 @@ def render_site(store, site_dir: Path, templates_dir: Path) -> None:
         }
 
         hero = None
-        if date_str == latest_date:
+        if in_root:
             leads = [c["lead"] for c in top_clusters][:3]
             headline = store.get_issue(date_str) or "、".join(
                 _short(l.get("title_zh") or l["title"], 18) for l in leads
@@ -116,9 +117,9 @@ def render_site(store, site_dir: Path, templates_dir: Path) -> None:
             hero = {"issue": issue, "headline": headline,
                     "digest": brief_digest, "date": date_str}
 
-        in_root = date_str == latest_date
-        html = day_tpl.render(
-            root="." if in_root else "..",
+        # days/ 下的页面一律用 ../ 前缀(否则样式表 404);
+        # 最新一期额外渲染一份 root="." 的版本作为 index.html
+        base_ctx = dict(
             latest=in_root,
             date_str=date_str,
             fmt_date_str=fmt_date(date_str),
@@ -130,8 +131,10 @@ def render_site(store, site_dir: Path, templates_dir: Path) -> None:
             groups=ordered_groups,
             generated_at=generated_at,
         )
+        html = day_tpl.render(root="..", **base_ctx)
         (site_dir / "days" / f"{date_str}.html").write_text(html, encoding="utf-8")
         if in_root:
+            html = day_tpl.render(root=".", **base_ctx)
             (site_dir / "index.html").write_text(html, encoding="utf-8")
 
     (site_dir / "archive.html").write_text(
